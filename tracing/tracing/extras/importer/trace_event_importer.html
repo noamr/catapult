@@ -252,7 +252,7 @@ tr.exportTo('tr.e.importer', function() {
           if (done)
             parser.finish();
           else
-            readMore();
+            requestIdleCallback(readMore);
         }).catch(e => {
           console.error(e);
         });
