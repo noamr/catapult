@@ -89,7 +89,7 @@ found in the LICENSE file.
     const trackDetailedModelStatsEl = tr.ui.b.findDeepElementMatching(
         document.body, '#track-detailed-model-stats');
     const importOptions = new tr.importer.ImportOptions();
-    importOptions.trackDetailedModelStats = trackDetailedModelStatsEl.checked;
+    importOptions.trackDetailedModelStats = false;
     const i = new tr.importer.Import(m, importOptions);
     const p = i.importTracesWithProgressDialog(traces);
 
@@ -156,7 +156,15 @@ found in the LICENSE file.
     // Don't hide the right hand controls ever. Bit of a hack since changing
     // flex layout in timelineViewEl can break other trace viewer use cases.
     selectEl.style.maxWidth = 'calc(100vw - 700px)';
-    timelineViewEl.leftControls.appendChild(selectEl);
+//    timelineViewEl.leftControls.appendChild(selectEl);
+    const inputElement = document.createElement('input');
+    inputElement.type = 'file';
+    inputElement.multiple = false;
+    timelineViewEl.leftControls.appendChild(inputElement);
+
+    inputElement.addEventListener('change', e => {
+      createViewFromTraces([], Array.from(inputElement.files));
+    });
 
     getAsync('/tracing/test_data/__file_list__', function(data) {
       const files = JSON.parse(data);
@@ -184,7 +192,7 @@ found in the LICENSE file.
         'Detailed file size stats',
         onHashChange);
     trackDetailedModelStatsEl.id = 'track-detailed-model-stats';
-    timelineViewEl.leftControls.appendChild(trackDetailedModelStatsEl);
+//    timelineViewEl.leftControls.appendChild(trackDetailedModelStatsEl);
   }
 
   let loadEventFired = false;

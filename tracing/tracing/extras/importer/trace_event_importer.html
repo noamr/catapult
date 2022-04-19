@@ -153,7 +153,6 @@ tr.exportTo('tr.e.importer', function() {
     this.eventsWereFromString_ = false;
     this.softwareMeasuredCpuCount_ = undefined;
 
-
     this.allAsyncEvents_ = [];
     this.allFlowEvents_ = [];
     this.allObjectEvents_ = [];
@@ -214,6 +213,16 @@ tr.exportTo('tr.e.importer', function() {
       this.events_ = eventData;
     }
 
+    const createStreamParser = $ => $
+          .node('{cat ph}', function(e) { return oboe.drop; })
+          .node('!.powerTraceAsString', this.storeSubtrace_.bind(this))
+          .node('!.systemTraceEvents', this.storeSubtrace_.bind(this))
+          .node('!.samples', this.storeSamples_.bind(this))
+          .node('!.stackFrames', this.storeStackFrames_.bind(this))
+          .node('!.displayTimeUnit', this.storeDisplayTimeUnit_.bind(this))
+          .node('!.traceAnnotations', this.storeTraceAnnotations_.bind(this))
+          .done(this.storeMetadata_.bind(this));
+
     // Some trace_event implementations put the actual trace events
     // inside a container. E.g { ... , traceEvents: [ ] }
     // If we see that, just pull out the trace events.
@@ -231,17 +240,28 @@ tr.exportTo('tr.e.importer', function() {
       this.storeDisplayTimeUnit_(container.displayTimeUnit);
       this.storeTraceAnnotations_(container.traceAnnotations);
       this.storeMetadata_(container);
+    } else if (this.events_ instanceof File) {
+      const parser = createStreamParser(oboe()
+        .node('traceEvents.*', e => this.processEvent_(e)));
+      const textStream = new TextDecoderStream();
+      this.events_.stream().pipeThrough(textStream);
+      const reader = textStream.readable.getReader();
+      const readMore = () => {
+        reader.read().then(({done, value}) => {
+          parser.write(value);
+          if (done)
+            parser.finish();
+          else
+            readMore();
+        }).catch(e => {
+          console.error(e);
+        });
+      }
+
+      readMore();
     } else if (this.events_ instanceof tr.b.TraceStream) {
-      const parser = oboe()
-          .node('{cat ph}', function(e) { return oboe.drop; })
-          .node('!.powerTraceAsString', this.storeSubtrace_.bind(this))
-          .node('!.systemTraceEvents', this.storeSubtrace_.bind(this))
-          .node('!.samples', this.storeSamples_.bind(this))
-          .node('!.stackFrames', this.storeStackFrames_.bind(this))
-          .node('!.displayTimeUnit', this.storeDisplayTimeUnit_.bind(this))
-          .node('!.traceAnnotations', this.storeTraceAnnotations_.bind(this))
-          .done(this.storeMetadata_.bind(this));
       this.events_.rewind();
+      const parser = createStreamParser(oboe());
       while (this.events_.hasData) {
         parser.write(this.events_.readNumBytes());
       }
@@ -261,6 +281,10 @@ tr.exportTo('tr.e.importer', function() {
     if (eventData instanceof tr.b.TraceStream) {
       if (eventData.isBinary) return false;
       eventData = eventData.header;
+    }
+
+    if (eventData instanceof File && eventData.type === 'application/json') {
+      return true;
     }
 
     if (typeof(eventData) === 'string' || eventData instanceof String) {
