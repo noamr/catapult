@@ -442,6 +442,7 @@ tr.exportTo('tr', function() {
      *    The message is the actual warning content.
      */
     importWarning(data) {
+      return;
       data.showToUser = !!data.showToUser;
 
       this.importWarnings_.push(data);

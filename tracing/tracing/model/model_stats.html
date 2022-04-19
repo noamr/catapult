@@ -31,6 +31,7 @@ tr.exportTo('tr.model', function() {
 
     willProcessBasicTraceEvent(phase, category, title, ts,
         opt_eventSizeinBytes) {
+      return;
       const key = phase + '/' + category + '/' + title;
       let eventStats = this.traceEventCountsByKey_.get(key);
       if (eventStats === undefined) {
