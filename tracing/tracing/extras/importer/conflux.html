@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2013 The Chromium Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+-->
+<link rel="import" href="/tracing/base/base.html">
+
+<script>
+'use strict';
+// Vinn workaround for JSzip requiring window.
+if (tr.isVinn) {
+  /**
+   * Hack.
+   */
+  global.window = {};
+}
+</script>
+<script src="/conflux@3.js"></script>
+<script>
+'use strict';
+// Vinn workaround for JSzip requiring window.
+if (tr.isVinn) {
+  /**
+   * Hack.
+   */
+  global.Conflux = global.window.Conflux;
+  global.window = undefined;
+} else if (tr.isNode) {
+  const confluxAbsPath = HTMLImportsLoader.hrefToAbsolutePath(
+      '/conflux@3.js');
+  const confluxModule = require(confluxAbsPath);
+  global.Conflux = confluxModule;
+}
+</script>

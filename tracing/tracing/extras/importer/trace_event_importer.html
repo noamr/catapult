@@ -15,6 +15,7 @@ found in the LICENSE file.
 <link rel="import" href="/tracing/extras/importer/heap_dump_trace_event_importer.html">
 <link rel="import" href="/tracing/extras/importer/legacy_heap_dump_trace_event_importer.html">
 <link rel="import" href="/tracing/extras/importer/oboe.html">
+<link rel="import" href="/tracing/extras/importer/conflux.html">
 <link rel="import" href="/tracing/extras/importer/profiling_dictionary_reader.html">
 <link rel="import" href="/tracing/extras/importer/trace_code_entry.html">
 <link rel="import" href="/tracing/extras/importer/trace_code_map.html">
@@ -241,25 +242,37 @@ tr.exportTo('tr.e.importer', function() {
       this.storeTraceAnnotations_(container.traceAnnotations);
       this.storeMetadata_(container);
     } else if (this.events_ instanceof File) {
-      const parser = createStreamParser(oboe()
-        .node('traceEvents.*', e => this.processEvent_(e)));
-      const textStream = new TextDecoderStream();
-      this.events_.stream().pipeThrough(textStream);
-      const reader = textStream.readable.getReader();
-      const readMore = () => {
-        reader.read().then(({done, value}) => {
-          parser.write(value);
-          if (done)
-            parser.finish();
-          else
-            requestIdleCallback(readMore);
-        }).catch(e => {
-          console.error(e);
-        });
-      }
+      (async () => {
+        const parser = createStreamParser(oboe()
+          .node('traceEvents.*', e => this.processEvent_(e)));
+        const textStream = new TextDecoderStream();
+        const inStream = this.events_.stream();
+        let jsonStream = inStream;
+          if (this.events_.type === 'application/zip') {
+          const {Reader} = window.conflux;
+          for await (const entry of Reader(this.events_)) {
+            jsonStream = entry.stream();
+            break;
+          }
+        }
+        jsonStream.pipeThrough(textStream);
+        const reader = textStream.readable.getReader();
+        const readMore = () => {
+          reader.read().then(({done, value}) => {
+            parser.write(value);
+            if (done)
+              parser.finish();
+            else
+              requestIdleCallback(readMore);
+          }).catch(e => {
+            console.error(e);
+          });
+        }
 
-      readMore();
+        readMore();
+      })();
     } else if (this.events_ instanceof tr.b.TraceStream) {
+
       this.events_.rewind();
       const parser = createStreamParser(oboe());
       while (this.events_.hasData) {
@@ -283,7 +296,8 @@ tr.exportTo('tr.e.importer', function() {
       eventData = eventData.header;
     }
 
-    if (eventData instanceof File && eventData.type === 'application/json') {
+
+    if (eventData instanceof File && (eventData.type === 'application/json' || eventData.type === 'application/zip')) {
       return true;
     }
 

@@ -31,6 +31,7 @@ tr.exportTo('tr.e.importer', function() {
    * @return {boolean} Whether eventData looks like zip compressed data.
    */
   ZipImporter.canImport = function(eventData) {
+    return false;
     let header;
     if (eventData instanceof ArrayBuffer) {
       header = new Uint8Array(eventData.slice(0, 2));

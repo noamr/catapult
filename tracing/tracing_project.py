@@ -89,6 +89,7 @@ class TracingProject(object):
   py_vulcanize_path = os.path.join(common_root_path, 'py_vulcanize')
   vinn_path = os.path.join(catapult_third_party_path, 'vinn')
 
+  conflux_path = os.path.join(tracing_third_party_path, 'conflux')
   jszip_path = os.path.join(tracing_third_party_path, 'jszip')
   pako_path = os.path.join(tracing_third_party_path, 'pako')
   jpegjs_path = os.path.join(tracing_third_party_path, 'jpeg-js')
@@ -128,6 +129,7 @@ class TracingProject(object):
     self.source_paths.append(self.tracing_third_party_path)
     self.source_paths.append(self.mre_path)
     self.source_paths.append(self.jszip_path)
+    self.source_paths.append(self.conflux_path)
     self.source_paths.append(self.pako_path)
     self.source_paths.append(self.jpegjs_path)
     self.source_paths.append(self.glmatrix_path)

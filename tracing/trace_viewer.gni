@@ -115,6 +115,7 @@ tracing_js_html_files = [
   "tracing/extras/importer/gzip_importer.html",
   "tracing/extras/importer/heap_dump_trace_event_importer.html",
   "tracing/extras/importer/jszip.html",
+  "tracing/extras/importer/conflux.html",
   "tracing/extras/importer/legacy_heap_dump_trace_event_importer.html",
   "tracing/extras/importer/linux_perf/android_parser.html",
   "tracing/extras/importer/linux_perf/binder_parser.html",
